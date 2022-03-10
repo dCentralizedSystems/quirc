@@ -25,9 +25,10 @@ extern "C" {
 #endif
 
 /* Check if we've seen the given code, and if not, print it on stdout.
+ * Return 1 if the output reported and 0 if it has been seen.
  * Include version info if requested.
  */
-void print_data(const struct quirc_data *data, struct dthash *dt,
+int print_data(const struct quirc_data *data, struct dthash *dt,
 		int want_verbose);
 
 /* Parse a string of the form "WxH" and return width and height as

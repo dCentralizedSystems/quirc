@@ -19,11 +19,11 @@
 
 #include "demoutil.h"
 
-void print_data(const struct quirc_data *data, struct dthash *dt,
+int print_data(const struct quirc_data *data, struct dthash *dt,
 		int want_verbose)
 {
 	if (dthash_seen(dt, data))
-		return;
+		return 0;
 
 	printf("==> %s\n", data->payload);
 
@@ -31,6 +31,7 @@ void print_data(const struct quirc_data *data, struct dthash *dt,
 		printf("    Version: %d, ECC: %c, Mask: %d, Type: %d\n\n",
 		       data->version, "MLHQ"[data->ecc_level],
 		       data->mask, data->data_type);
+	return 1;
 }
 
 int parse_size(const char *text, int *video_width, int *video_height)

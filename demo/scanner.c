@@ -33,6 +33,7 @@ static int video_width = 640;
 static int video_height = 480;
 static int want_verbose = 0;
 static int printer_timeout = 2;
+static int scan_count = 0;
 
 static int main_loop(struct camera *cam,
 		     struct quirc *q, struct mjpeg_decoder *mj)
@@ -41,7 +42,7 @@ static int main_loop(struct camera *cam,
 
 	dthash_init(&dt, printer_timeout);
 
-	for (;;) {
+	for (int cur_scan = 0; scan_count == 0 || cur_scan < scan_count; ) {
 		int w, h;
 		int i, count;
 		uint8_t *buf = quirc_begin(q, &w, &h);
@@ -83,10 +84,14 @@ static int main_loop(struct camera *cam,
 			struct quirc_data data;
 
 			quirc_extract(q, i, &code);
-			if (!quirc_decode(&code, &data))
-				print_data(&data, &dt, want_verbose);
+			if (!quirc_decode(&code, &data)) {
+			        if( print_data(&data, &dt, want_verbose) )
+				  cur_scan++;
+			}
 		}
 	}
+
+	return 0;
 }
 
 static int run_scanner(void)
@@ -155,12 +160,13 @@ static void usage(const char *progname)
 {
 	printf("Usage: %s [options]\n\n"
 "Valid options are:\n\n"
-"    -v             Show extra data for detected codes.\n"
-"    -d <device>    Specify camera device path.\n"
-"    -s <WxH>       Specify video dimensions.\n"
-"    -p <timeout>   Set printer timeout (seconds).\n"
-"    --help         Show this information.\n"
-"    --version      Show library version information.\n",
+"    -v              Show extra data for detected codes.\n"
+"    -d <device>     Specify camera device path.\n"
+"    -s <WxH>        Specify video dimensions.\n"
+"    -p <timeout>    Set printer timeout (seconds).\n"
+"    -c <scan count> Number of scans (default infite).\n"
+"    --help          Show this information.\n"
+"    --version       Show library version information.\n",
 	progname);
 }
 
@@ -177,7 +183,7 @@ int main(int argc, char **argv)
 	printf("Copyright (C) 2010-2012 Daniel Beer <dlbeer@gmail.com>\n");
 	printf("\n");
 
-	while ((opt = getopt_long(argc, argv, "d:s:vg:p:",
+	while ((opt = getopt_long(argc, argv, "d:s:vg:p:c:",
 				  longopts, NULL)) >= 0)
 		switch (opt) {
 		case 'V':
@@ -199,6 +205,10 @@ int main(int argc, char **argv)
 
 		case 'p':
 			printer_timeout = atoi(optarg);
+			break;
+
+		case 'c':
+			scan_count = atoi(optarg);
 			break;
 
 		case 'd':
